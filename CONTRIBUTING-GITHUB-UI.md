@@ -11,6 +11,10 @@ If you prefer to avoid local setup, these steps let you make changes, run CI, an
 3) Download artifacts
 - After the run completes, open the `run-pipeline` job and click `Artifacts` → `newsgenerator-output` to download generated outputs.
 
+7) Trigger pipeline from a PR comment
+- Maintainers can trigger a pipeline run by commenting `/run-pipeline` on a Pull Request. The workflow only accepts this command from repository owners, members, or collaborators for safety.
+
+
 4) Create a Draft Release
 - Releases → Draft a new release → select the `v0.1` tag or create it.
 
