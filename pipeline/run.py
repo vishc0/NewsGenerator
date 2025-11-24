@@ -2,6 +2,13 @@ import argparse
 import yaml
 import logging
 from pathlib import Path
+import sys
+
+# Ensure repository root is on sys.path so imports like `ingestors` work
+# when running this file directly (e.g. `python pipeline/run.py`) under CI runners.
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from ingestors import rss_ingestor
 from researcher import summarizer
