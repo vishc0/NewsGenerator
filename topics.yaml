@@ -1,24 +1,98 @@
-- name: "World headlines"
+- name: "World News"
   sources:
-    - "https://rss.cnn.com/rss/edition.rss"
-    - "https://feeds.bbci.co.uk/news/rss.xml"
+    - "https://feeds.bbci.co.uk/news/world/rss.xml"
+    - "https://www.reutersagency.com/feed/?best-topics=world&post_type=best"
+    - "https://apnews.com/hub/ap-top-news?format=xml"
   lookback_hours: 48
-  cadence_per_day: 4
-  article_cap: 30
+  cadence_per_day: 6
+  article_cap: 40
   segments: 15
 
-- name: "China headlines"
+- name: "USA News"
   sources:
-    - "https://www.scmp.com/rss/0/feed"
+    - "http://rss.cnn.com/rss/cnn_us.rss"
+    - "https://feeds.nbcnews.com/nbcnews/public/news"
+    - "http://rssfeeds.usatoday.com/usatoday-NewsTopStories"
   lookback_hours: 48
-  cadence_per_day: 3
-  article_cap: 20
+  cadence_per_day: 6
+  article_cap: 30
+  segments: 12
+
+- name: "India News"
+  sources:
+    - "https://timesofindia.indiatimes.com/rssfeeds/-2128936835.cms"
+    - "https://feeds.feedburner.com/ndtvnews-india-news"
+    - "https://www.hindustantimes.com/rss/india-news/rssfeed.xml"
+  lookback_hours: 48
+  cadence_per_day: 6
+  article_cap: 30
+  segments: 12
+
+- name: "China News"
+  sources:
+    - "https://www.scmp.com/rss/91/feed"
+    - "https://www.chinadaily.com.cn/rss/china_rss.xml"
+    - "https://feeds.bbci.co.uk/news/world/asia/china/rss.xml"
+  lookback_hours: 48
+  cadence_per_day: 4
+  article_cap: 25
   segments: 10
 
-- name: "H1-B News"
-  sources: []
+- name: "Weather"
+  type: "weather"
+  provider: "open-meteo"
+  lookback_hours: 6
+  cadence_per_day: 24
+  locations:
+    - name: "Hyderabad"
+      lat: 17.3850
+      lon: 78.4867
+    - name: "Austin"
+      lat: 30.2672
+      lon: -97.7431
+    - name: "Cumming"
+      lat: 34.2073
+      lon: -84.1402
+  article_cap: 0
+  segments: 3
+
+- name: "H1-B / Immigration"
+  sources:
+    - "https://www.uscis.gov/news/rss"
+    - "https://www.immigration.com/rss.xml"
+    - "https://www.murthy.com/feed/"
+    - "https://redbus2us.com/feed/"
   lookback_hours: 72
   cadence_per_day: 2
-  # The engine will also accept files in `sources/` like a list of article URLs or PDFs.
+  article_cap: 20
+  segments: 6
+
+- name: "AI Tech"
+  sources:
+    - "https://www.technologyreview.com/feed/tag/ai/"
+    - "https://venturebeat.com/category/ai/feed/"
+    - "https://www.theverge.com/ai-artificial-intelligence/rss/index.xml"
+  lookback_hours: 48
+  cadence_per_day: 6
+  article_cap: 25
+  segments: 10
+
+- name: "Universe / Space"
+  sources:
+    - "https://www.nasa.gov/rss/dyn/breaking_news.rss"
+    - "https://solarsystem.nasa.gov/rss/news.xml"
+    - "https://www.space.com/feeds/all"
+  lookback_hours: 72
+  cadence_per_day: 2
+  article_cap: 20
+  segments: 8
+
+- name: "Forsyth County News"
+  sources:
+    - "https://www.forsythnews.com/rss/"
+    - "https://www.wsbtv.com/partners/rss/"
+    - "https://www.ajc.com/arcio/rss/category/news/local/"
+  lookback_hours: 48
+  cadence_per_day: 6
   article_cap: 20
   segments: 6
