@@ -1,8 +1,31 @@
 """Generate podcast RSS feed for iPhone and other podcast apps."""
 import os
+import subprocess
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 import xml.etree.ElementTree as ET
+
+
+def get_audio_duration(file_path):
+    """Get audio duration using ffprobe if available.
+
+    Returns duration as HH:MM:SS string, or None if ffprobe is not available.
+    """
+    try:
+        result = subprocess.run(
+            ['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
+             '-of', 'default=noprint_wrappers=1:nokey=1', str(file_path)],
+            capture_output=True, text=True, timeout=10
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            seconds = float(result.stdout.strip())
+            hours = int(seconds // 3600)
+            minutes = int((seconds % 3600) // 60)
+            secs = int(seconds % 60)
+            return f'{hours:02d}:{minutes:02d}:{secs:02d}'
+    except (subprocess.TimeoutExpired, FileNotFoundError, ValueError):
+        pass
+    return None
 
 
 def generate_podcast_rss(podcast_dir='outbox/podcasts', output_file='outbox/podcast_feed.xml',
@@ -29,10 +52,11 @@ def generate_podcast_rss(podcast_dir='outbox/podcasts', output_file='outbox/podc
     channel = ET.SubElement(rss, 'channel')
 
     # Channel metadata
+    now_utc = datetime.now(timezone.utc)
     ET.SubElement(channel, 'title').text = title
     ET.SubElement(channel, 'description').text = description
     ET.SubElement(channel, 'language').text = 'en-us'
-    ET.SubElement(channel, 'pubDate').text = datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
+    ET.SubElement(channel, 'pubDate').text = now_utc.strftime('%a, %d %b %Y %H:%M:%S GMT')
 
     # iTunes-specific tags for better podcast app support
     itunes_author = ET.SubElement(channel, '{http://www.itunes.com/dtds/podcast-1.0.dtd}author')
@@ -53,7 +77,9 @@ def generate_podcast_rss(podcast_dir='outbox/podcasts', output_file='outbox/podc
                 if episode_file.exists():
                     episodes_found += 1
                     topic_name = topic_dir.name.replace('_', ' ')
-                    episode_date = datetime.fromtimestamp(episode_file.stat().st_mtime)
+                    episode_date = datetime.fromtimestamp(
+                        episode_file.stat().st_mtime, tz=timezone.utc
+                    )
                     file_size = episode_file.stat().st_size
 
                     item = ET.SubElement(channel, 'item')
@@ -72,9 +98,17 @@ def generate_podcast_rss(podcast_dir='outbox/podcasts', output_file='outbox/podc
                     enclosure.set('length', str(file_size))
                     enclosure.set('type', 'audio/mpeg')
 
-                    # iTunes duration (placeholder - would need ffprobe to get actual duration)
+                    # iTunes duration - try to get actual duration from file
                     itunes_duration = ET.SubElement(item, '{http://www.itunes.com/dtds/podcast-1.0.dtd}duration')
-                    itunes_duration.text = '00:15:00'  # Placeholder
+                    duration = get_audio_duration(episode_file)
+                    if duration:
+                        itunes_duration.text = duration
+                    else:
+                        # Estimate based on file size (64kbps mono = ~8KB/sec)
+                        estimated_seconds = file_size / 8000
+                        mins = int(estimated_seconds // 60)
+                        secs = int(estimated_seconds % 60)
+                        itunes_duration.text = f'00:{mins:02d}:{secs:02d}'
 
     # Write RSS feed
     tree = ET.ElementTree(rss)
@@ -105,7 +139,7 @@ def generate_blog_index(content_dir='content', output_file='content/index.md'):
     for md_file in sorted(content_path.glob('*.md')):
         if md_file.name != 'index.md':
             topic_name = md_file.stem.replace('_', ' ')
-            mod_time = datetime.fromtimestamp(md_file.stat().st_mtime)
+            mod_time = datetime.fromtimestamp(md_file.stat().st_mtime, tz=timezone.utc)
             posts.append({
                 'name': topic_name,
                 'file': md_file.name,
@@ -113,10 +147,11 @@ def generate_blog_index(content_dir='content', output_file='content/index.md'):
             })
 
     # Generate index
+    now_utc = datetime.now(timezone.utc)
     lines = [
         '# NewsGenerator Blog',
         '',
-        f'*Last updated: {datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")}*',
+        f'*Last updated: {now_utc.strftime("%Y-%m-%d %H:%M UTC")}*',
         '',
         '## Latest Posts',
         ''
