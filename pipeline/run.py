@@ -10,8 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from ingestors import rss_ingestor, weather_ingestor
-from researcher import summarizer
+from ingestors import rss_ingestor, weather_ingestor, file_ingestor, youtube_ingestor
+from researcher import summarizer, token_tracker
 from formatter import blog_formatter
 from publisher import blog_publisher, podcast_publisher
 from tts import gtts_tts
@@ -37,6 +37,11 @@ def main(topics_file, since_hours):
     topics = load_topics(topics_file)
     out_dir = Path('outbox')
     out_dir.mkdir(exist_ok=True)
+    
+    # Scan sources directory for additional inputs
+    additional_sources = file_ingestor.scan_sources_directory('sources')
+    logging.info(f"Found {len(additional_sources['urls'])} URLs, "
+                f"{len(additional_sources['youtube_urls'])} YouTube URLs in sources/")
 
     for topic in topics:
         name = topic.get('name')
@@ -59,12 +64,38 @@ def main(topics_file, since_hours):
             # Handle RSS-based topics
             sources = topic.get('sources', [])
             articles = []
+            
+            # Fetch from RSS feeds
             for src in sources:
                 try:
                     entries = rss_ingestor.fetch_feed(src, since_hours)
                     articles.extend(entries)
                 except Exception as e:
                     logging.warning(f"Failed to ingest {src}: {e}")
+            
+            # Add articles from manual URLs in sources/urls.txt
+            for url in additional_sources['urls']:
+                try:
+                    articles.append({
+                        'title': f"Article from {url}",
+                        'link': url,
+                        'published': ''
+                    })
+                except Exception as e:
+                    logging.warning(f"Failed to add URL {url}: {e}")
+            
+            # Add YouTube transcripts from sources/youtube_urls.txt
+            for yt_url in additional_sources['youtube_urls']:
+                try:
+                    video_id = youtube_ingestor.extract_video_id(yt_url)
+                    if video_id:
+                        articles.append({
+                            'title': f"YouTube Video {video_id}",
+                            'link': yt_url,
+                            'published': ''
+                        })
+                except Exception as e:
+                    logging.warning(f"Failed to add YouTube URL {yt_url}: {e}")
 
             # naive dedupe by link and keep newest
             seen = set()
@@ -80,7 +111,14 @@ def main(topics_file, since_hours):
             # prepare per-segment summaries: one article -> one segment (best-effort)
             for art in unique[:segments]:
                 try:
-                    text = rss_ingestor.fetch_article_text(art['link'])
+                    link = art['link']
+                    
+                    # Check if it's a YouTube URL
+                    if 'youtube.com' in link or 'youtu.be' in link:
+                        text = youtube_ingestor.fetch_transcript(link)
+                    else:
+                        text = rss_ingestor.fetch_article_text(link)
+                    
                     # ask summarizer for short segment sized for ~1 minute (approx 120-160 words)
                     s = summarizer.summarize(text, model='google/flan-t5-small')
                     summaries.append({'title': art.get('title'), 'summary': s, 'link': art.get('link')})
@@ -117,6 +155,14 @@ def main(topics_file, since_hours):
             logging.info(f"Created episode: {episode_path}")
             # publish step (dry-run unless IA keys present)
             # TODO: upload to Internet Archive when keys provided
+    
+    # Log token usage report at the end
+    token_tracker.get_tracker().log_report()
+    
+    # Save token usage report to file
+    tracker_file = out_dir / 'token_usage_report.txt'
+    token_tracker.get_tracker().save_report(tracker_file)
+    logging.info(f"Token usage report saved to: {tracker_file}")
 
 
 if __name__ == '__main__':
