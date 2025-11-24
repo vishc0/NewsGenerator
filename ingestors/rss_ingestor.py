@@ -21,14 +21,24 @@ def fetch_feed(url, since_hours=48):
         if pub < cutoff:
             continue
 
-        entries.append({'title': e.get('title'), 'link': e.get('link'), 'published': pub.isoformat()})
+        entries.append({
+            'title': e.get('title'),
+            'link': e.get('link'),
+            'published': pub.isoformat(),
+            'description': e.get('description', e.get('summary', ''))
+        })
 
     return entries
 
 
 def fetch_article_text(url):
     # newspaper3k provides robust extraction for many sites
-    art = Article(url)
-    art.download()
-    art.parse()
-    return art.text
+    try:
+        art = Article(url)
+        art.download()
+        art.parse()
+        return art.text
+    except Exception:
+        # Fallback: return empty string if article cannot be fetched
+        # The pipeline will handle this gracefully
+        return ""
