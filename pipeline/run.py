@@ -133,8 +133,12 @@ def main(topics_file, since_hours):
                 try:
                     link = art['link']
                     
-                    # Check if it's a YouTube URL
-                    if 'youtube.com' in link or 'youtu.be' in link:
+                    # Check if it's a YouTube URL using proper URL parsing
+                    from urllib.parse import urlparse
+                    parsed_url = urlparse(link)
+                    is_youtube = parsed_url.netloc in ['www.youtube.com', 'youtube.com', 'youtu.be', 'm.youtube.com']
+                    
+                    if is_youtube:
                         text = youtube_ingestor.fetch_transcript(link)
                     else:
                         text = rss_ingestor.fetch_article_text(link)
