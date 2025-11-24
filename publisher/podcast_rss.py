@@ -1,9 +1,14 @@
 """Podcast RSS feed generation for distribution via Apple Podcasts, Spotify, etc."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import xml.etree.ElementTree as ET
 import xml.dom.minidom as minidom
+
+
+def utc_now():
+    """Get current UTC time as timezone-aware datetime."""
+    return datetime.now(timezone.utc)
 
 
 def create_podcast_rss(
@@ -56,8 +61,8 @@ def create_podcast_rss(
     ET.SubElement(channel, 'description').text = description
     ET.SubElement(channel, 'link').text = link
     ET.SubElement(channel, 'language').text = language
-    ET.SubElement(channel, 'copyright').text = f'© {datetime.utcnow().year} {author}'
-    ET.SubElement(channel, 'lastBuildDate').text = _format_rfc2822(datetime.utcnow())
+    ET.SubElement(channel, 'copyright').text = f'© {utc_now().year} {author}'
+    ET.SubElement(channel, 'lastBuildDate').text = _format_rfc2822(utc_now())
     
     # iTunes specific elements
     ET.SubElement(channel, '{http://www.itunes.com/dtds/podcast-1.0.dtd}author').text = author
@@ -92,7 +97,7 @@ def create_podcast_rss(
         })
         
         ET.SubElement(item, 'guid', {'isPermaLink': 'false'}).text = ep.get('guid', audio_url)
-        ET.SubElement(item, 'pubDate').text = _format_rfc2822(ep.get('publish_date', datetime.utcnow()))
+        ET.SubElement(item, 'pubDate').text = _format_rfc2822(ep.get('publish_date', utc_now()))
         
         # iTunes duration (HH:MM:SS or MM:SS)
         duration_seconds = ep.get('duration', 0)
@@ -169,7 +174,7 @@ def generate_episode_metadata(topic_name, episode_path, base_url):
             pass
     
     # Generate episode metadata
-    now = datetime.utcnow()
+    now = utc_now()
     date_str = now.strftime('%Y-%m-%d')
     
     # Construct audio URL

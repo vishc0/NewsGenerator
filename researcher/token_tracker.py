@@ -1,7 +1,12 @@
 """Token usage estimation and reporting for LLM API calls."""
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
+
+
+def utc_now():
+    """Get current UTC time as timezone-aware datetime."""
+    return datetime.now(timezone.utc)
 
 
 class TokenUsageTracker:
@@ -88,7 +93,7 @@ class TokenUsageTracker:
     def save_report(self, output_path):
         """Save the usage report to a file."""
         with open(output_path, 'w', encoding='utf-8') as f:
-            f.write(f"Token Usage Report - {datetime.utcnow().isoformat()}\n")
+            f.write(f"Token Usage Report - {utc_now().isoformat()}\n")
             f.write(self.get_report())
 
 

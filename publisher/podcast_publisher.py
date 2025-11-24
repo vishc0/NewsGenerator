@@ -2,7 +2,12 @@ from pydub import AudioSegment
 from pathlib import Path
 import os
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
+
+
+def utc_now():
+    """Get current UTC time as timezone-aware datetime."""
+    return datetime.now(timezone.utc)
 
 
 def concat_segments(segment_paths, out_path):
@@ -83,7 +88,7 @@ def generate_ia_metadata(topic_name, description=None):
     Returns:
         Dict with IA metadata
     """
-    now = datetime.utcnow()
+    now = utc_now()
     date_str = now.strftime('%Y-%m-%d')
     identifier = f"newsgenerator-{topic_name.lower().replace(' ', '-')}-{date_str}"
     
