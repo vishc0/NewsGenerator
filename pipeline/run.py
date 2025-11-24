@@ -3,6 +3,7 @@ import yaml
 import logging
 from pathlib import Path
 import sys
+import re
 
 # Ensure repository root is on sys.path so imports like `ingestors` work
 # when running this file directly (e.g. `python pipeline/run.py`) under CI runners.
@@ -29,8 +30,12 @@ def clamp(n, lo, hi):
 
 
 def sanitize_filename(name):
-    """Convert a topic name to a safe filename by replacing problematic characters."""
-    return name.replace(' ', '_').replace('/', '_').replace('\\', '_').replace(':', '_')
+    """Convert a topic name to a safe filename by replacing problematic characters.
+    
+    Handles all common filesystem-reserved characters including Windows reserved chars.
+    """
+    # Replace filesystem-reserved characters with underscores
+    return re.sub(r'[<>:"/\\|?*]', '_', name).replace(' ', '_')
 
 
 def main(topics_file, since_hours):

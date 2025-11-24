@@ -1,6 +1,7 @@
 import feedparser
 import requests
 from newspaper import Article
+from newspaper.article import ArticleException
 from datetime import datetime, timedelta
 
 
@@ -38,7 +39,7 @@ def fetch_article_text(url):
         art.download()
         art.parse()
         return art.text
-    except Exception:
+    except (ArticleException, requests.RequestException, ConnectionError, OSError, ValueError):
         # Fallback: return empty string if article cannot be fetched
-        # The pipeline will handle this gracefully
+        # The pipeline will handle this gracefully by using RSS description
         return ""
