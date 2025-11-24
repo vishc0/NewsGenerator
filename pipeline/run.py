@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from ingestors import rss_ingestor
+from ingestors import rss_ingestor, weather_ingestor
 from researcher import summarizer
 from formatter import blog_formatter
 from publisher import blog_publisher, podcast_publisher
@@ -28,6 +28,11 @@ def clamp(n, lo, hi):
     return max(lo, min(hi, n))
 
 
+def sanitize_filename(name):
+    """Convert a topic name to a safe filename by replacing spaces and slashes."""
+    return name.replace(' ', '_').replace('/', '_').replace('\\', '_')
+
+
 def main(topics_file, since_hours):
     topics = load_topics(topics_file)
     out_dir = Path('outbox')
@@ -35,50 +40,63 @@ def main(topics_file, since_hours):
 
     for topic in topics:
         name = topic.get('name')
-        sources = topic.get('sources', [])
+        topic_type = topic.get('type', 'rss')  # default to RSS
         article_cap = clamp(topic.get('article_cap', 30), 1, 200)
         segments = clamp(topic.get('segments', 15), 1, 30)  # default 15 one-minute segments
-        logging.info(f"Processing topic: {name} (cap={article_cap}, segments={segments})")
+        logging.info(f"Processing topic: {name} (type={topic_type}, cap={article_cap}, segments={segments})")
 
-        articles = []
-        for src in sources:
-            try:
-                entries = rss_ingestor.fetch_feed(src, since_hours)
-                articles.extend(entries)
-            except Exception as e:
-                logging.warning(f"Failed to ingest {src}: {e}")
-
-        # naive dedupe by link and keep newest
-        seen = set()
-        unique = []
-        for a in sorted(articles, key=lambda x: x.get('published', ''), reverse=True):
-            if a['link'] in seen:
-                continue
-            seen.add(a['link'])
-            unique.append(a)
-
-        unique = unique[:article_cap]
-
-        # prepare per-segment summaries: one article -> one segment (best-effort)
         summaries = []
-        for art in unique[:segments]:
+        
+        # Handle weather topics differently
+        if topic_type == 'weather':
+            locations = topic.get('locations', [])
+            provider = topic.get('provider', 'open-meteo')
             try:
-                text = rss_ingestor.fetch_article_text(art['link'])
-                # ask summarizer for short segment sized for ~1 minute (approx 120-160 words)
-                s = summarizer.summarize(text, model='google/flan-t5-small')
-                summaries.append({'title': art.get('title'), 'summary': s, 'link': art.get('link')})
+                summaries = weather_ingestor.fetch_weather(locations, provider)
             except Exception as e:
-                logging.warning(f"Failed to summarize {art.get('link')}: {e}")
+                logging.warning(f"Failed to fetch weather data: {e}")
+        else:
+            # Handle RSS-based topics
+            sources = topic.get('sources', [])
+            articles = []
+            for src in sources:
+                try:
+                    entries = rss_ingestor.fetch_feed(src, since_hours)
+                    articles.extend(entries)
+                except Exception as e:
+                    logging.warning(f"Failed to ingest {src}: {e}")
+
+            # naive dedupe by link and keep newest
+            seen = set()
+            unique = []
+            for a in sorted(articles, key=lambda x: x.get('published', ''), reverse=True):
+                if a['link'] in seen:
+                    continue
+                seen.add(a['link'])
+                unique.append(a)
+
+            unique = unique[:article_cap]
+
+            # prepare per-segment summaries: one article -> one segment (best-effort)
+            for art in unique[:segments]:
+                try:
+                    text = rss_ingestor.fetch_article_text(art['link'])
+                    # ask summarizer for short segment sized for ~1 minute (approx 120-160 words)
+                    s = summarizer.summarize(text, model='google/flan-t5-small')
+                    summaries.append({'title': art.get('title'), 'summary': s, 'link': art.get('link')})
+                except Exception as e:
+                    logging.warning(f"Failed to summarize {art.get('link')}: {e}")
 
         # write blog draft
         md = blog_formatter.format_topic(name, summaries)
-        file_path = out_dir / f"{name.replace(' ', '_')}.md"
+        safe_name = sanitize_filename(name)
+        file_path = out_dir / f"{safe_name}.md"
         file_path.write_text(md, encoding='utf-8')
         logging.info(f"Wrote draft for {name} -> {file_path}")
-        blog_publisher.write_markdown_to_content(md, f"{name.replace(' ', '_')}.md")
+        blog_publisher.write_markdown_to_content(md, f"{safe_name}.md")
 
         # TTS and podcast assembly
-        podcast_dir = out_dir / 'podcasts' / name.replace(' ', '_')
+        podcast_dir = out_dir / 'podcasts' / safe_name
         podcast_dir.mkdir(parents=True, exist_ok=True)
         segment_files = []
         for idx, s in enumerate(summaries, start=1):
