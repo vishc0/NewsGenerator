@@ -1,0 +1,24 @@
+- name: "World headlines"
+  sources:
+    - "https://rss.cnn.com/rss/edition.rss"
+    - "https://feeds.bbci.co.uk/news/rss.xml"
+  lookback_hours: 48
+  cadence_per_day: 4
+  article_cap: 30
+  segments: 15
+
+- name: "China headlines"
+  sources:
+    - "https://www.scmp.com/rss/0/feed"
+  lookback_hours: 48
+  cadence_per_day: 3
+  article_cap: 20
+  segments: 10
+
+- name: "H1-B News"
+  sources: []
+  lookback_hours: 72
+  cadence_per_day: 2
+  # The engine will also accept files in `sources/` like a list of article URLs or PDFs.
+  article_cap: 20
+  segments: 6

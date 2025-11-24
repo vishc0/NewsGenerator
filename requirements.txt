@@ -1,0 +1,11 @@
+feedparser
+requests
+python-dotenv
+gTTS
+newspaper3k
+youtube-transcript-api
+yt-dlp
+internetarchive
+PyYAML
+openai
+pydub

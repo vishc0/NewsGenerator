@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+outbox/
+content/
+.env
+*.pyc
+*.pyo
+dist/
+build/
+*.egg-info/
+node_modules/
+venv/
