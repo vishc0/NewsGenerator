@@ -2,6 +2,7 @@ feedparser
 requests
 python-dotenv
 gTTS
+lxml[html_clean]>=6.0
 newspaper3k
 youtube-transcript-api
 yt-dlp
