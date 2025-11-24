@@ -3,6 +3,7 @@ import yaml
 import logging
 from pathlib import Path
 import sys
+from datetime import datetime, timezone
 
 # Ensure repository root is on sys.path so imports like `ingestors` work
 # when running this file directly (e.g. `python pipeline/run.py`) under CI runners.
@@ -13,10 +14,16 @@ if str(ROOT) not in sys.path:
 from ingestors import rss_ingestor, weather_ingestor, file_ingestor, youtube_ingestor
 from researcher import summarizer, token_tracker
 from formatter import blog_formatter
-from publisher import blog_publisher, podcast_publisher
+from publisher import blog_publisher, podcast_publisher, podcast_rss
 from tts import gtts_tts
+import os
 
 logging.basicConfig(level=logging.INFO)
+
+
+def utc_now():
+    """Get current UTC time as timezone-aware datetime."""
+    return datetime.now(timezone.utc)
 
 
 def load_topics(path):
@@ -38,10 +45,23 @@ def main(topics_file, since_hours):
     out_dir = Path('outbox')
     out_dir.mkdir(exist_ok=True)
     
+    # Check for Internet Archive credentials
+    ia_access_key = os.getenv('INTERNET_ARCHIVE_ACCESS_KEY')
+    ia_secret = os.getenv('INTERNET_ARCHIVE_SECRET')
+    enable_ia_upload = bool(ia_access_key and ia_secret)
+    
+    if enable_ia_upload:
+        logging.info("Internet Archive credentials found - uploads will be enabled")
+    else:
+        logging.info("Internet Archive credentials not found - running in dry-run mode")
+    
     # Scan sources directory for additional inputs
     additional_sources = file_ingestor.scan_sources_directory('sources')
     logging.info(f"Found {len(additional_sources['urls'])} URLs, "
                 f"{len(additional_sources['youtube_urls'])} YouTube URLs in sources/")
+    
+    # Track all episodes for RSS feed generation
+    all_episodes = []
 
     for topic in topics:
         name = topic.get('name')
@@ -126,12 +146,16 @@ def main(topics_file, since_hours):
                     logging.warning(f"Failed to summarize {art.get('link')}: {e}")
 
         # write blog draft
-        md = blog_formatter.format_topic(name, summaries)
+        md = blog_formatter.format_topic(name, summaries, format_type='jekyll')
         safe_name = sanitize_filename(name)
         file_path = out_dir / f"{safe_name}.md"
         file_path.write_text(md, encoding='utf-8')
         logging.info(f"Wrote draft for {name} -> {file_path}")
-        blog_publisher.write_markdown_to_content(md, f"{safe_name}.md")
+        
+        # Write to content directory with date-based filename for Jekyll
+        date_prefix = utc_now().strftime('%Y-%m-%d')
+        jekyll_filename = f"{date_prefix}-{safe_name}.md"
+        blog_publisher.write_markdown_to_content(md, jekyll_filename)
 
         # TTS and podcast assembly
         podcast_dir = out_dir / 'podcasts' / safe_name
@@ -153,8 +177,61 @@ def main(topics_file, since_hours):
         if segment_files:
             episode_path = podcast_publisher.concat_segments(segment_files, podcast_dir / 'episode.mp3')
             logging.info(f"Created episode: {episode_path}")
-            # publish step (dry-run unless IA keys present)
-            # TODO: upload to Internet Archive when keys provided
+            
+            # Upload to Internet Archive if credentials are available
+            if enable_ia_upload:
+                ia_metadata = podcast_publisher.generate_ia_metadata(
+                    name,
+                    description=f"Automated news curation for {name}"
+                )
+                success = podcast_publisher.upload_to_internet_archive(
+                    episode_path,
+                    ia_metadata,
+                    access_key=ia_access_key,
+                    secret=ia_secret,
+                    dry_run=not enable_ia_upload
+                )
+                
+                if success and enable_ia_upload:
+                    # Track episode for RSS feed
+                    episode_url = f"https://archive.org/download/{ia_metadata['identifier']}/episode.mp3"
+                    all_episodes.append({
+                        'topic_name': name,
+                        'audio_url': episode_url,
+                        'ia_identifier': ia_metadata['identifier'],
+                        'metadata': ia_metadata
+                    })
+            else:
+                logging.info(f"Skipping Internet Archive upload for {name} (no credentials)")
+        else:
+            logging.warning(f"No podcast segments created for {name}")
+    
+    # Generate podcast RSS feed if we have episodes
+    if all_episodes and enable_ia_upload:
+        logging.info(f"Generating podcast RSS feed with {len(all_episodes)} episodes")
+        
+        # Create RSS feed for each topic's episodes
+        for ep in all_episodes:
+            topic_name = ep['topic_name']
+            rss_episodes = [podcast_rss.generate_episode_metadata(
+                topic_name,
+                f"outbox/podcasts/{sanitize_filename(topic_name)}/episode.mp3",
+                ep['audio_url'].rsplit('/', 1)[0]  # Base URL
+            )]
+            
+            rss_content = podcast_rss.create_podcast_rss(
+                title=f"NewsGenerator: {topic_name}",
+                description=f"Automated news curation for {topic_name}",
+                author="NewsGenerator",
+                email="news@example.com",  # TODO: Make this configurable
+                link="https://github.com/vishc0/NewsGenerator",
+                image_url="https://via.placeholder.com/1400x1400.png?text=NewsGenerator",  # TODO: Add real artwork
+                episodes=rss_episodes
+            )
+            
+            rss_file = out_dir / 'podcasts' / sanitize_filename(topic_name) / 'podcast.rss'
+            podcast_rss.save_podcast_rss(rss_content, rss_file)
+            logging.info(f"Podcast RSS feed saved to: {rss_file}")
     
     # Log token usage report at the end
     token_tracker.get_tracker().log_report()
