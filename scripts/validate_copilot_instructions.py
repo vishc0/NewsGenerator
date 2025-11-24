@@ -1,10 +1,30 @@
 #!/usr/bin/env python3
 """
 Validate that copilot-instructions.md is properly configured according to GitHub best practices.
+
+This script checks that the .github/copilot-instructions.md file follows
+GitHub's recommended structure and content guidelines as documented at:
+https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions
 """
 
 import sys
 from pathlib import Path
+
+
+# Configuration constants
+MAX_RECOMMENDED_LINES = 1000  # GitHub recommends keeping instructions under 1000 lines
+MIN_CONTENT_LENGTH = 100  # Minimum characters for the file to be considered useful
+
+# Recommended sections based on GitHub best practices
+# Source: https://docs.github.com/en/copilot/tutorials/use-custom-instructions
+RECOMMENDED_SECTIONS = [
+    'purpose',      # What the project does
+    'tech stack',   # Technologies and dependencies
+    'architecture', # High-level design
+    'conventions',  # Project-specific patterns
+    'workflows',    # Developer commands and processes
+    'security',     # Security and secrets management
+]
 
 
 def validate_copilot_instructions():
@@ -31,11 +51,11 @@ def validate_copilot_instructions():
     
     print("✅ File is readable")
     
-    # Check 3: File size (should be under 1000 lines)
+    # Check 3: File size (should be under recommended limit)
     lines = content.split('\n')
     line_count = len(lines)
-    if line_count > 1000:
-        warnings.append(f"⚠️  File has {line_count} lines (recommended: under 1000)")
+    if line_count > MAX_RECOMMENDED_LINES:
+        warnings.append(f"⚠️  File has {line_count} lines (recommended: under {MAX_RECOMMENDED_LINES})")
     else:
         print(f"✅ File size is appropriate ({line_count} lines)")
     
@@ -45,20 +65,11 @@ def validate_copilot_instructions():
     else:
         print("✅ File starts with a Markdown heading")
     
-    # Check 5: Has recommended sections (based on best practices)
-    recommended_sections = [
-        'purpose',
-        'tech stack',
-        'architecture',
-        'conventions',
-        'workflows',
-        'security',
-    ]
-    
+    # Check 5: Has recommended sections (based on GitHub best practices)
     content_lower = content.lower()
     missing_sections = []
     
-    for section in recommended_sections:
+    for section in RECOMMENDED_SECTIONS:
         if section not in content_lower:
             missing_sections.append(section)
     
@@ -74,9 +85,9 @@ def validate_copilot_instructions():
     else:
         print(f"✅ Has good structure ({len(headers)} headers)")
     
-    # Check 7: Not empty
-    if len(content.strip()) < 100:
-        errors.append("❌ File content is too short to be useful")
+    # Check 7: Not empty or too short
+    if len(content.strip()) < MIN_CONTENT_LENGTH:
+        errors.append(f"❌ File content is too short (minimum: {MIN_CONTENT_LENGTH} characters)")
     else:
         print("✅ File has substantial content")
     
