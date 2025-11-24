@@ -1,0 +1,66 @@
+/home/runner/work/NewsGenerator/NewsGenerator/.venv/lib/python3.12/site-packages/pydub/utils.py:170: RuntimeWarning: Couldn't find ffmpeg or avconv - defaulting to ffmpeg, but may not work
+  warn("Couldn't find ffmpeg or avconv - defaulting to ffmpeg, but may not work", RuntimeWarning)
+INFO:root:Internet Archive credentials not found - running in dry-run mode
+INFO:root:Found 2 URLs, 0 YouTube URLs in sources/
+INFO:root:Processing topic: World News (type=rss, cap=40, segments=15)
+WARNING:root:Failed to summarize https://feeds.bbci.co.uk/news/world/rss.xml: Article `download()` failed with HTTPSConnectionPool(host='feeds.bbci.co.uk', port=443): Max retries exceeded with url: /news/world/rss.xml (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f3ec6b28d40>: Failed to resolve 'feeds.bbci.co.uk' ([Errno -5] No address associated with hostname)")) on URL https://feeds.bbci.co.uk/news/world/rss.xml
+WARNING:root:Failed to summarize https://www.reutersagency.com/feed/?best-topics=world&post_type=best: Article `download()` failed with HTTPSConnectionPool(host='www.reutersagency.com', port=443): Max retries exceeded with url: /feed/?best-topics=world&post_type=best (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f3ec69abad0>: Failed to resolve 'www.reutersagency.com' ([Errno -5] No address associated with hostname)")) on URL https://www.reutersagency.com/feed/?best-topics=world&post_type=best
+INFO:root:Wrote draft for World News -> outbox/World_News.md
+WARNING:root:No podcast segments created for World News
+INFO:root:Processing topic: USA News (type=rss, cap=30, segments=12)
+WARNING:root:Failed to summarize https://feeds.bbci.co.uk/news/world/rss.xml: Article `download()` failed with HTTPSConnectionPool(host='feeds.bbci.co.uk', port=443): Max retries exceeded with url: /news/world/rss.xml (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f3ec69c21b0>: Failed to resolve 'feeds.bbci.co.uk' ([Errno -5] No address associated with hostname)")) on URL https://feeds.bbci.co.uk/news/world/rss.xml
+WARNING:root:Failed to summarize https://www.reutersagency.com/feed/?best-topics=world&post_type=best: Article `download()` failed with HTTPSConnectionPool(host='www.reutersagency.com', port=443): Max retries exceeded with url: /feed/?best-topics=world&post_type=best (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f3ec69c2a20>: Failed to resolve 'www.reutersagency.com' ([Errno -5] No address associated with hostname)")) on URL https://www.reutersagency.com/feed/?best-topics=world&post_type=best
+INFO:root:Wrote draft for USA News -> outbox/USA_News.md
+WARNING:root:No podcast segments created for USA News
+INFO:root:Processing topic: India News (type=rss, cap=30, segments=12)
+WARNING:root:Failed to summarize https://feeds.bbci.co.uk/news/world/rss.xml: Article `download()` failed with HTTPSConnectionPool(host='feeds.bbci.co.uk', port=443): Max retries exceeded with url: /news/world/rss.xml (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f3ec69c1550>: Failed to resolve 'feeds.bbci.co.uk' ([Errno -5] No address associated with hostname)")) on URL https://feeds.bbci.co.uk/news/world/rss.xml
+WARNING:root:Failed to summarize https://www.reutersagency.com/feed/?best-topics=world&post_type=best: Article `download()` failed with HTTPSConnectionPool(host='www.reutersagency.com', port=443): Max retries exceeded with url: /feed/?best-topics=world&post_type=best (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f3ec69c03b0>: Failed to resolve 'www.reutersagency.com' ([Errno -5] No address associated with hostname)")) on URL https://www.reutersagency.com/feed/?best-topics=world&post_type=best
+INFO:root:Wrote draft for India News -> outbox/India_News.md
+WARNING:root:No podcast segments created for India News
+INFO:root:Processing topic: China News (type=rss, cap=25, segments=10)
+WARNING:root:Failed to summarize https://feeds.bbci.co.uk/news/world/rss.xml: Article `download()` failed with HTTPSConnectionPool(host='feeds.bbci.co.uk', port=443): Max retries exceeded with url: /news/world/rss.xml (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f3ec69aacf0>: Failed to resolve 'feeds.bbci.co.uk' ([Errno -5] No address associated with hostname)")) on URL https://feeds.bbci.co.uk/news/world/rss.xml
+WARNING:root:Failed to summarize https://www.reutersagency.com/feed/?best-topics=world&post_type=best: Article `download()` failed with HTTPSConnectionPool(host='www.reutersagency.com', port=443): Max retries exceeded with url: /feed/?best-topics=world&post_type=best (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f3ec69c08f0>: Failed to resolve 'www.reutersagency.com' ([Errno -5] No address associated with hostname)")) on URL https://www.reutersagency.com/feed/?best-topics=world&post_type=best
+INFO:root:Wrote draft for China News -> outbox/China_News.md
+WARNING:root:No podcast segments created for China News
+INFO:root:Processing topic: Weather (type=weather, cap=1, segments=3)
+INFO:root:Wrote draft for Weather -> outbox/Weather.md
+WARNING:root:TTS failed for segment 1 of Weather: Failed to connect. Probable cause: Unknown
+WARNING:root:TTS failed for segment 2 of Weather: Failed to connect. Probable cause: Unknown
+WARNING:root:TTS failed for segment 3 of Weather: Failed to connect. Probable cause: Unknown
+WARNING:root:No podcast segments created for Weather
+INFO:root:Processing topic: H1-B / Immigration (type=rss, cap=20, segments=6)
+WARNING:root:Failed to summarize https://feeds.bbci.co.uk/news/world/rss.xml: Article `download()` failed with HTTPSConnectionPool(host='feeds.bbci.co.uk', port=443): Max retries exceeded with url: /news/world/rss.xml (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f3ec69d9c10>: Failed to resolve 'feeds.bbci.co.uk' ([Errno -5] No address associated with hostname)")) on URL https://feeds.bbci.co.uk/news/world/rss.xml
+WARNING:root:Failed to summarize https://www.reutersagency.com/feed/?best-topics=world&post_type=best: Article `download()` failed with HTTPSConnectionPool(host='www.reutersagency.com', port=443): Max retries exceeded with url: /feed/?best-topics=world&post_type=best (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f3ec69d8770>: Failed to resolve 'www.reutersagency.com' ([Errno -5] No address associated with hostname)")) on URL https://www.reutersagency.com/feed/?best-topics=world&post_type=best
+INFO:root:Wrote draft for H1-B / Immigration -> outbox/H1-B___Immigration.md
+WARNING:root:No podcast segments created for H1-B / Immigration
+INFO:root:Processing topic: AI Tech (type=rss, cap=25, segments=10)
+WARNING:root:Failed to summarize https://feeds.bbci.co.uk/news/world/rss.xml: Article `download()` failed with HTTPSConnectionPool(host='feeds.bbci.co.uk', port=443): Max retries exceeded with url: /news/world/rss.xml (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f3ec69c1850>: Failed to resolve 'feeds.bbci.co.uk' ([Errno -5] No address associated with hostname)")) on URL https://feeds.bbci.co.uk/news/world/rss.xml
+WARNING:root:Failed to summarize https://www.reutersagency.com/feed/?best-topics=world&post_type=best: Article `download()` failed with HTTPSConnectionPool(host='www.reutersagency.com', port=443): Max retries exceeded with url: /feed/?best-topics=world&post_type=best (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f3ec69c3a10>: Failed to resolve 'www.reutersagency.com' ([Errno -5] No address associated with hostname)")) on URL https://www.reutersagency.com/feed/?best-topics=world&post_type=best
+INFO:root:Wrote draft for AI Tech -> outbox/AI_Tech.md
+WARNING:root:No podcast segments created for AI Tech
+INFO:root:Processing topic: Universe / Space (type=rss, cap=20, segments=8)
+WARNING:root:Failed to summarize https://feeds.bbci.co.uk/news/world/rss.xml: Article `download()` failed with HTTPSConnectionPool(host='feeds.bbci.co.uk', port=443): Max retries exceeded with url: /news/world/rss.xml (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f3ec69c39e0>: Failed to resolve 'feeds.bbci.co.uk' ([Errno -5] No address associated with hostname)")) on URL https://feeds.bbci.co.uk/news/world/rss.xml
+WARNING:root:Failed to summarize https://www.reutersagency.com/feed/?best-topics=world&post_type=best: Article `download()` failed with HTTPSConnectionPool(host='www.reutersagency.com', port=443): Max retries exceeded with url: /feed/?best-topics=world&post_type=best (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f3ec69c0560>: Failed to resolve 'www.reutersagency.com' ([Errno -5] No address associated with hostname)")) on URL https://www.reutersagency.com/feed/?best-topics=world&post_type=best
+INFO:root:Wrote draft for Universe / Space -> outbox/Universe___Space.md
+WARNING:root:No podcast segments created for Universe / Space
+INFO:root:Processing topic: Forsyth County News (type=rss, cap=20, segments=6)
+WARNING:root:Failed to summarize https://feeds.bbci.co.uk/news/world/rss.xml: Article `download()` failed with HTTPSConnectionPool(host='feeds.bbci.co.uk', port=443): Max retries exceeded with url: /news/world/rss.xml (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f3ec69d98b0>: Failed to resolve 'feeds.bbci.co.uk' ([Errno -5] No address associated with hostname)")) on URL https://feeds.bbci.co.uk/news/world/rss.xml
+WARNING:root:Failed to summarize https://www.reutersagency.com/feed/?best-topics=world&post_type=best: Article `download()` failed with HTTPSConnectionPool(host='www.reutersagency.com', port=443): Max retries exceeded with url: /feed/?best-topics=world&post_type=best (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f3ec69aadb0>: Failed to resolve 'www.reutersagency.com' ([Errno -5] No address associated with hostname)")) on URL https://www.reutersagency.com/feed/?best-topics=world&post_type=best
+INFO:root:Wrote draft for Forsyth County News -> outbox/Forsyth_County_News.md
+WARNING:root:No podcast segments created for Forsyth County News
+INFO:root:
+============================================================
+Token Usage Report
+============================================================
+Total API Calls: 0
+Failed Calls: 0
+Total Input Tokens: 0
+Total Output Tokens: 0
+Total Tokens: 0
+
+Estimated Costs (approximate):
+  Hugging Face Inference API: FREE (with rate limits)
+  OpenAI GPT-3.5-Turbo: ~$0.0000
+    (assuming $0.002 per 1K tokens average)
+============================================================
+INFO:root:Token usage report saved to: outbox/token_usage_report.txt
