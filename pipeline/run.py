@@ -3,6 +3,7 @@ import yaml
 import logging
 from pathlib import Path
 import sys
+import re
 
 # Ensure repository root is on sys.path so imports like `ingestors` work
 # when running this file directly (e.g. `python pipeline/run.py`) under CI runners.
@@ -26,6 +27,15 @@ def load_topics(path):
 
 def clamp(n, lo, hi):
     return max(lo, min(hi, n))
+
+
+def sanitize_filename(name):
+    """Convert a topic name to a safe filename by replacing problematic characters.
+    
+    Handles all common filesystem-reserved characters including Windows reserved chars.
+    """
+    # Replace filesystem-reserved characters with underscores
+    return re.sub(r'[<>:"/\\|?*]', '_', name).replace(' ', '_')
 
 
 def main(topics_file, since_hours):
@@ -64,6 +74,9 @@ def main(topics_file, since_hours):
         for art in unique[:segments]:
             try:
                 text = rss_ingestor.fetch_article_text(art['link'])
+                # Fallback to description if article text is empty
+                if not text or text.strip() == '':
+                    text = art.get('description', '')
                 # ask summarizer for short segment sized for ~1 minute (approx 120-160 words)
                 s = summarizer.summarize(text, model='google/flan-t5-small')
                 summaries.append({'title': art.get('title'), 'summary': s, 'link': art.get('link')})
@@ -72,13 +85,14 @@ def main(topics_file, since_hours):
 
         # write blog draft
         md = blog_formatter.format_topic(name, summaries)
-        file_path = out_dir / f"{name.replace(' ', '_')}.md"
+        safe_name = sanitize_filename(name)
+        file_path = out_dir / f"{safe_name}.md"
         file_path.write_text(md, encoding='utf-8')
         logging.info(f"Wrote draft for {name} -> {file_path}")
-        blog_publisher.write_markdown_to_content(md, f"{name.replace(' ', '_')}.md")
+        blog_publisher.write_markdown_to_content(md, f"{safe_name}.md")
 
         # TTS and podcast assembly
-        podcast_dir = out_dir / 'podcasts' / name.replace(' ', '_')
+        podcast_dir = out_dir / 'podcasts' / safe_name
         podcast_dir.mkdir(parents=True, exist_ok=True)
         segment_files = []
         for idx, s in enumerate(summaries, start=1):
