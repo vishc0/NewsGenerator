@@ -29,6 +29,9 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -41,10 +44,14 @@ jobs:
         run: |
           python pipeline/run.py --topics topics.yaml --since 48
 
+      - name: Generate podcast RSS feed
+        run: python publisher/generate_rss.py
+
       - name: Upload outputs as artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: newsgenerator-output
+          name: newsgenerator-output-${{ github.run_number }}
           path: |
             outbox/**
             content/**
+          retention-days: 30

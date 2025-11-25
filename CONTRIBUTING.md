@@ -40,6 +40,7 @@ Recommended repository settings
 How AI maintainers (Copilot) can help from GitHub
 - The AI agent can open PRs with code changes, update workflows, and draft release notes.
 - Provide the agent with instructions for the next task (e.g., "Implement Open-Meteo ingestor and add tests"). The agent will create a branch, push changes, and open a PR.
+- Repository-specific instructions for Copilot are maintained in `.github/copilot-instructions.md` and help guide AI agents to follow project conventions and best practices.
 
 If something fails
 - Open Actions logs and paste the relevant snippet into an Issue; tag `area:infra` and assign to maintainers.
