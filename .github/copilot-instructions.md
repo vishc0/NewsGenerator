@@ -48,8 +48,7 @@ Help AI coding agents quickly implement and extend the News Generator engine: an
 - Content extraction: `codelucas/newspaper` (newspaper3k) — solid for article text extraction.
 - Feeds: `kurtmckee/feedparser` — minimal, reliable RSS parsing.
 - YouTube transcripts/downloads: `jdepoix/youtube-transcript-api`, `yt-dlp/yt-dlp` for media and captions.
- - YouTube transcripts/downloads: `jdepoix/youtube-transcript-api`, `yt-dlp/yt-dlp` for media and captions.
- - Default LLM: Hugging Face Inference API (`google/flan-t5-small` used in scaffold). The scaffold prefers HF when `HUGGINGFACE_API_KEY` is present and falls back to OpenAI if configured.
+- Default LLM: Hugging Face Inference API (`google/flan-t5-small` used in scaffold). The scaffold prefers HF when `HUGGINGFACE_API_KEY` is present and falls back to OpenAI if configured.
 - Auto-blog examples: `calumjs/gpt-auto-blog-writer` (good example of generating markdown and pushing to repo), `ikramhasan/AutoBlog-AI-Blog-Generator` (local-LLM examples).
 - TTS: `coqui-ai/TTS` or `mozilla/TTS` for on-prem free TTS; `gTTS` is a lightweight fallback for small-scale usage.
 - Scheduler / automation: `huginn` or plain `GitHub Actions` workflows depending on desired control.
@@ -63,8 +62,7 @@ Help AI coding agents quickly implement and extend the News Generator engine: an
 - `sources/` (optional): directory where user can drop `*.txt|*.md|*.pdf|*.docx|youtube_urls.txt` that the ingestors read.
 - `ingestors/`: `rss_ingestor.py`, `site_ingestor.py`, `youtube_ingestor.py`, `file_ingestor.py`.
 - `pipeline/run.py`: single entry for local testing; honors `--topics` and `--since` flags.
-- `publisher/` contains `blog_publisher.py` and `podcast_publisher.py`.
- - `publisher/` contains `blog_publisher.py` and `podcast_publisher.py`. The `podcast_publisher` concatenates per-segment MP3 files (requires `ffmpeg` available for `pydub`).
+- `publisher/` contains `blog_publisher.py` and `podcast_publisher.py`. The `podcast_publisher` concatenates per-segment MP3 files (requires `ffmpeg` available for `pydub`).
 - `config.yml` or `.env` for local secrets; CI uses `GITHUB_SECRETS`.
 
 ## Developer Workflows and Commands
@@ -80,8 +78,7 @@ Help AI coding agents quickly implement and extend the News Generator engine: an
 - Run individual components for debugging:
   - Ingest RSS: `python ingestors/rss_ingestor.py --source https://example.com/rss`.
   - Summarize an article: `python researcher/summarizer.py --file samples/article.html`.
-- CI scheduling: `/.github/workflows/schedule-pipeline.yml` will use `cron` to run every 6/8 hours; keys are stored in `Secrets`.
- - CI scheduling: `/.github/workflows/schedule-pipeline.yml` runs every 6 hours by default. Publishing steps (uploads or pushes) require repository Secrets (`HUGGINGFACE_API_KEY`, `OPENAI_API_KEY`, `INTERNET_ARCHIVE_*`). Forks won't have access to your secrets; workflows that need secrets will fail in forks (this helps protect your keys).
+- CI scheduling: `/.github/workflows/schedule-pipeline.yml` runs every 6 hours by default. Publishing steps (uploads or pushes) require repository Secrets (`HUGGINGFACE_API_KEY`, `OPENAI_API_KEY`, `INTERNET_ARCHIVE_*`). Forks won't have access to your secrets; workflows that need secrets will fail in forks (this helps protect your keys).
 
 ## Security and Secrets Management
 - Never commit keys. Use `.env` locally and `Secrets` in GitHub Actions.
@@ -120,7 +117,7 @@ Help AI coding agents quickly implement and extend the News Generator engine: an
 - When adding a new ingestor, add unit-level sample inputs into `samples/` with expected outputs.
 - Add integration tests that run ingestion -> summarize -> format with small fixtures (no real API calls; mock LLM/TTS).
 - When touching publisher code, include a dry-run mode that writes outputs to `outbox/` instead of publishing.
- - When adding a new LLM adapter, include token usage estimates for cost control and a small default model (HF small models are preferred).
- - When adding a publish step (Internet Archive/GH Pages), require an explicit environment variable or secret to enable it; otherwise keep behavior as dry-run.
+- When adding a new LLM adapter, include token usage estimates for cost control and a small default model (HF small models are preferred).
+- When adding a publish step (Internet Archive/GH Pages), require an explicit environment variable or secret to enable it; otherwise keep behavior as dry-run.
 
 If anything here is unclear or incomplete, tell me which sections you want expanded (examples: exact `topics.yaml` schema, sample `GitHub Actions` workflow, or a minimal runnable scaffold). I'll iterate and then scaffold the repo with a working minimal pipeline.
