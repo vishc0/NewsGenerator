@@ -1,9 +1,37 @@
 # Copilot instructions for NewsGenerator
 
-Purpose
-- Help AI coding agents quickly implement and extend the News Generator engine: an automated pipeline that collects recent articles (by topic), curates and summarizes them, publishes daily/regular blog posts, and produces podcast episodes.
+## Purpose
+Help AI coding agents quickly implement and extend the News Generator engine: an automated pipeline that collects recent articles (by topic), curates and summarizes them, publishes daily/regular blog posts, and produces podcast episodes.
 
-Big-picture architecture (high level)
+## Tech Stack
+- **Language**: Python 3.10+ (3.11 recommended)
+- **Key Libraries**: feedparser, newspaper3k, youtube-transcript-api, yt-dlp, gTTS, pydub, PyYAML, python-dotenv, openai, internetarchive
+- **LLM Integration**: Hugging Face Inference API (preferred), OpenAI (fallback)
+- **Audio Processing**: ffmpeg (external dependency for pydub)
+- **CI/CD**: GitHub Actions for scheduling and automation
+- **Hosting**: GitHub Pages (blog), Internet Archive (podcasts)
+
+## Coding Guidelines
+- **Python Style**: Follow PEP 8 conventions for readability
+- **Imports**: Use absolute imports from repository root (e.g., `from ingestors import rss_ingestor`)
+- **Error Handling**: Always wrap external API calls (RSS, LLM, TTS) in try-except blocks with logging
+- **Logging**: Use Python's `logging` module (not print statements) for all informational and error messages
+- **File Paths**: Use `pathlib.Path` for cross-platform compatibility
+- **Configuration**: Never hardcode secrets; use `.env` locally and GitHub Secrets in CI
+- **Encoding**: Always specify `encoding='utf-8'` when reading/writing files
+- **Function Size**: Keep functions focused and under 50 lines when possible
+- **Comments**: Add comments only when the code's intent isn't obvious from the code itself
+
+## Testing and Quality
+- **Testing**: Currently no test infrastructure exists. When adding tests:
+  - Place tests in a `tests/` directory mirroring the source structure
+  - Use pytest as the testing framework
+  - Mock external API calls (LLM, RSS feeds, Internet Archive) to avoid dependencies
+  - Create sample fixtures in `samples/` directory for test data
+- **Build Verification**: Run `python pipeline/run.py --topics topics.yaml --since 48` to verify the pipeline works end-to-end
+- **Dry Runs**: Publishing steps should support dry-run mode (write to `outbox/` instead of uploading)
+
+## Architecture Overview
 - Ingestors: collect content from RSS, site scrapers, provided article lists, PDF/DOC/TXT files, YouTube URLs and channels. (Expect `ingestors/`)
   - RSS/feeds: `feedparser` or `kurtmckee/feedparser` usage.
   - Article extraction: `newspaper3k` (repo `codelucas/newspaper`) or `readability-lxml`.
@@ -16,7 +44,7 @@ Big-picture architecture (high level)
   - Podcast: host audio files on a zero-cost host (recommended: Internet Archive for free storage) and expose an RSS feed (host RSS on GitHub Pages). Anchor is a convenient distribution option but may require manual steps—prefer the RSS approach for full automation.
 - Orchestration & Scheduling: GitHub Actions for cron scheduling (public repo = free runner minutes for this usage). Heavy jobs (large audio generation) can run on self-hosted runner or lightweight VPS.
 
-Selected OSS building blocks (candidates to pull-in)
+## Selected OSS Building Blocks
 - Content extraction: `codelucas/newspaper` (newspaper3k) — solid for article text extraction.
 - Feeds: `kurtmckee/feedparser` — minimal, reliable RSS parsing.
 - YouTube transcripts/downloads: `jdepoix/youtube-transcript-api`, `yt-dlp/yt-dlp` for media and captions.
@@ -26,7 +54,7 @@ Selected OSS building blocks (candidates to pull-in)
 - TTS: `coqui-ai/TTS` or `mozilla/TTS` for on-prem free TTS; `gTTS` is a lightweight fallback for small-scale usage.
 - Scheduler / automation: `huginn` or plain `GitHub Actions` workflows depending on desired control.
 
-Important project-specific conventions (how this repo will be organized)
+## Project Structure and Conventions
 - `topics.yaml`: user-provided topics list (topic name, sources, lookback-hours, cadence). Example entry:
   - name: "China headlines"
     sources: ["https://www.scmp.com/rss/news.xml", "https://example-site.com/rss"]
@@ -39,7 +67,7 @@ Important project-specific conventions (how this repo will be organized)
  - `publisher/` contains `blog_publisher.py` and `podcast_publisher.py`. The `podcast_publisher` concatenates per-segment MP3 files (requires `ffmpeg` available for `pydub`).
 - `config.yml` or `.env` for local secrets; CI uses `GITHUB_SECRETS`.
 
-Developer workflows and commands
+## Developer Workflows and Commands
 - Local dev (Windows PowerShell):
   - Create venv and install:```
   python -m venv .venv
@@ -55,18 +83,18 @@ Developer workflows and commands
 - CI scheduling: `/.github/workflows/schedule-pipeline.yml` will use `cron` to run every 6/8 hours; keys are stored in `Secrets`.
  - CI scheduling: `/.github/workflows/schedule-pipeline.yml` runs every 6 hours by default. Publishing steps (uploads or pushes) require repository Secrets (`HUGGINGFACE_API_KEY`, `OPENAI_API_KEY`, `INTERNET_ARCHIVE_*`). Forks won't have access to your secrets; workflows that need secrets will fail in forks (this helps protect your keys).
 
-Security notes for public repos
+## Security and Secrets Management
 - Never commit keys. Use `.env` locally and `Secrets` in GitHub Actions.
 - The scheduled workflow will run in this repository and can access the repository's secrets. A forked repo cannot access your secrets and therefore cannot publish from your CI.
 - For extra safety, the publish/upload job should check for presence of secrets and exit cleanly if missing (the scaffold uses dry-run behavior when IA keys are not present).
 
-Zero-cost architecture recommendations (practical choices)
+## Zero-Cost Architecture Recommendations
 - Blog hosting: GitHub Pages (Jekyll/Hugo/Eleventy) — store generated Markdown in `content/` and publish.
 - Podcast hosting: store MP3s on Internet Archive (free) then publish RSS hosted on GitHub Pages. This enables Apple/Spotify distribution by RSS submission. Anchor is an alternative (convenient but may add friction for automation).
 - Compute & scheduler: GitHub Actions as primary orchestrator (public repo). For heavy TTS/transcoding, either run on a small self-hosted runner or stagger jobs to keep within free limits.
 - Storage & retention: store metadata + episode links in the repo or a small DB; keep audio on Internet Archive and mark old items for deletion after 1 month via an automated retention job.
 
-Integration & API keys (store in CI/heavily guarded places)
+## Integration & API Keys
 - Add these to `Repository Settings -> Secrets` (names recommended):
   - `OPENAI_API_KEY` (if using OpenAI for summarization)
   - `INTERNET_ARCHIVE_ACCESS_KEY` and `INTERNET_ARCHIVE_SECRET`
@@ -74,13 +102,13 @@ Integration & API keys (store in CI/heavily guarded places)
   - `TTS_API_KEY` for commercial TTS providers (optional)
 - Local `.env` for development (do NOT commit).
 
-Patterns and pitfalls found during repo scans (practical tips)
+## Common Patterns and Pitfalls
 - Prefer RSS & site-native feeds before scraping — feeds are stable and avoid heavy scraping logic.
 - `newspaper3k` often fails on JS-heavy sites; keep a failover extractor (readability or fallback to full-html-save then manual extraction).
 - YouTube transcripts may be missing for short or auto-generated captions; combine `youtube-transcript-api` and `yt-dlp` fallback.
 - Audio file sizes: generate reasonably compressed MP3 (64–96 kbps mono for voice) to reduce storage & bandwidth.
 
-Files the agent should look at first when working on code
+## Key Files to Review
 - `topics.yaml` — primary input.
 - `ingestors/rss_ingestor.py` and `ingestors/site_ingestor.py` — ingestion logic.
 - `researcher/summarizer.py` — LLM call wrappers and prompt templates.
@@ -88,7 +116,7 @@ Files the agent should look at first when working on code
 - `publisher/blog_publisher.py` and `publisher/podcast_publisher.py` — publishing logic.
 - `pipeline/run.py` — orchestration entrypoint and CLI.
 
-What to do next (agent checklist when making changes)
+## Development Best Practices
 - When adding a new ingestor, add unit-level sample inputs into `samples/` with expected outputs.
 - Add integration tests that run ingestion -> summarize -> format with small fixtures (no real API calls; mock LLM/TTS).
 - When touching publisher code, include a dry-run mode that writes outputs to `outbox/` instead of publishing.
