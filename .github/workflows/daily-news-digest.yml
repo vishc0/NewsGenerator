@@ -2,8 +2,10 @@ name: Daily News Digest
 
 on:
   schedule:
-    # Runs every day at 08:00 UTC
-    - cron: '0 8 * * *'
+    # Runs every day at 08:00 Eastern Time (EST = UTC-5). GitHub cron uses UTC,
+    # so we schedule at 13:00 UTC which corresponds to 08:00 EST. Note this
+    # will not automatically adjust for daylight saving (EDT).
+    - cron: '0 13 * * *'
   workflow_dispatch: {}
 
 jobs:
