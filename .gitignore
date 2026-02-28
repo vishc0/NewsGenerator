@@ -3,6 +3,7 @@ __pycache__/
 outbox/
 content/
 .env
+.env.example
 *.pyc
 *.pyo
 dist/

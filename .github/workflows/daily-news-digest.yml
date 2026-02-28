@@ -1,0 +1,45 @@
+name: Daily News Digest
+
+on:
+  schedule:
+    # Runs every day at 08:00 UTC
+    - cron: '0 8 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  build-and-send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run simple aggregator
+        env:
+          # Recipient email (required)
+          NEWS_TO_EMAIL: ${{ secrets.NEWS_TO_EMAIL }}
+          NEWS_FROM_EMAIL: ${{ secrets.NEWS_FROM_EMAIL }}
+          # Optional SMTP settings; set these as repository secrets if you want outbound email
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+        run: |
+          mkdir -p outbox
+          python3 pipeline/simple_aggregator.py --topics topics.yaml --to "$NEWS_TO_EMAIL" --from "$NEWS_FROM_EMAIL"
+
+      - name: Upload outbox artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: news-digest-outbox
+          path: outbox/
