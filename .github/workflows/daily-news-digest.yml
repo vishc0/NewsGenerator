@@ -28,6 +28,8 @@ jobs:
           # Recipient email (required)
           NEWS_TO_EMAIL: ${{ secrets.NEWS_TO_EMAIL }}
           NEWS_FROM_EMAIL: ${{ secrets.NEWS_FROM_EMAIL }}
+          # Ensure Python can import local packages
+          PYTHONPATH: ${{ github.workspace }}
           # Optional SMTP settings; set these as repository secrets if you want outbound email
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}

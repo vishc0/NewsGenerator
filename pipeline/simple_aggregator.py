@@ -18,7 +18,59 @@ import subprocess
 from pathlib import Path
 from datetime import datetime
 from email.message import EmailMessage
-from ingestors.rss_ingestor import fetch_feed
+from typing import List
+import os
+import xml.etree.ElementTree as ET
+from urllib.request import urlopen, Request
+
+
+def _fallback_fetch_feed(url: str, since_hours: int = 48) -> List[dict]:
+    """Minimal RSS parser using stdlib (used for local testing when deps
+    are not installed). Returns list of entries with keys: title, link,
+    published, description.
+    """
+    try:
+        req = Request(url, headers={"User-Agent": "news-aggregator/1.0"})
+        with urlopen(req, timeout=20) as r:
+            data = r.read()
+    except Exception:
+        return []
+
+    try:
+        root = ET.fromstring(data)
+    except Exception:
+        return []
+
+    items = []
+    # Support both RSS and Atom
+    for item in root.findall('.//item') + root.findall('.//{http://www.w3.org/2005/Atom}entry'):
+        title = item.findtext('title') or item.findtext('{http://www.w3.org/2005/Atom}title') or ''
+        link = item.findtext('link') or ''
+        # link in Atom may be in href attr
+        if not link:
+            link_el = item.find('{http://www.w3.org/2005/Atom}link')
+            if link_el is not None:
+                link = link_el.attrib.get('href', '')
+        pub = item.findtext('pubDate') or item.findtext('updated') or ''
+        desc = item.findtext('description') or item.findtext('summary') or ''
+        items.append({'title': title, 'link': link, 'published': pub, 'description': desc})
+
+    return items
+
+
+# Use fallback when explicitly requested via env var (local testing)
+def fetch_feed(url, since_hours=48):
+    # If fallback mode requested, use stdlib parser
+    if os.getenv('SIMPLE_AGGREGATOR_FALLBACK') == '1':
+        return _fallback_fetch_feed(url, since_hours=since_hours)
+
+    # Otherwise try to import the repository ingestor (used in CI)
+    try:
+        from ingestors.rss_ingestor import fetch_feed as repo_fetch
+        return repo_fetch(url, since_hours=since_hours)
+    except Exception:
+        # If import or repo fetch fails, fall back to stdlib parser
+        return _fallback_fetch_feed(url, since_hours=since_hours)
 import smtplib
 import ssl
 
